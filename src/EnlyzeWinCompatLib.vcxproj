@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="winnt_40.cpp" />
     <ClCompile Include="winnt_50.cpp" />
     <ClCompile Include="winnt_51.cpp" />
     <ClCompile Include="winnt_51_sp2.cpp" />
@@ -21,6 +22,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <MASM Include="winnt_40_forwarders.asm" />
     <MASM Include="winnt_50_forwarders.asm" />
     <MASM Include="winnt_51_forwarders.asm" />
     <MASM Include="winnt_51_sp2_forwarders.asm" />

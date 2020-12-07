@@ -18,6 +18,9 @@
     <ClCompile Include="winnt_51_sp2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="winnt_40.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EnlyzeWinCompatLib.h">
@@ -38,6 +41,9 @@
       <Filter>Source Files</Filter>
     </MASM>
     <MASM Include="winnt_51_sp2_forwarders.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="winnt_40_forwarders.asm">
       <Filter>Source Files</Filter>
     </MASM>
   </ItemGroup>
