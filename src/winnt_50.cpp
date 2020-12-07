@@ -254,12 +254,13 @@ LibGetVersionExW(LPOSVERSIONINFOW lpVersionInformation)
         return FALSE;
     }
 
-    // Check if we are running on Windows 2000.
-    if (lpVersionInformation->dwMajorVersion == 5 && lpVersionInformation->dwMinorVersion == 0)
+    // Check if we are running on something older than Windows XP.
+    if (lpVersionInformation->dwMajorVersion < 5 || lpVersionInformation->dwMajorVersion == 5 && lpVersionInformation->dwMinorVersion == 0)
     {
         // Pretend to be Windows XP, which is the minimum version officially supported by the CRT.
         // If we don't do that, the CRT throws ::Concurrency::unsupported_os() in ResourceManager::RetrieveSystemVersionInformation.
         // Fortunately, this is the only function calling GetVersionExW.
+        lpVersionInformation->dwMajorVersion = 5;
         lpVersionInformation->dwMinorVersion = 1;
     }
 
