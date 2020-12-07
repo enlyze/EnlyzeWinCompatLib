@@ -3,7 +3,7 @@
 // Written by Colin Finck for ENLYZE GmbH
 //
 
-// This file implements required APIs not available in Windows NT 4.0 RTM.
+// This file implements required APIs not available in Windows 2000 RTM (NT 5.0).
 #include "EnlyzeWinCompatLibInternal.h"
 
 typedef BOOL (WINAPI *PFN_GETMODULEHANDLEEXW)(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule);

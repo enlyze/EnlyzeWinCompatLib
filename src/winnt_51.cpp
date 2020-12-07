@@ -3,7 +3,7 @@
 // Written by Colin Finck for ENLYZE GmbH
 //
 
-// This file implements required APIs not available in Windows 2000 RTM (NT 5.0).
+// This file implements required APIs not available in Windows XP RTM (NT 5.1).
 #include "EnlyzeWinCompatLibInternal.h"
 
 typedef PVOID (WINAPI *PFN_DECODEPOINTER)(PVOID Ptr);
