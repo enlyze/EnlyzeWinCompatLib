@@ -12,7 +12,7 @@ typedef BOOL (WINAPI *PFN_GETLOGICALPROCESSORINFORMATION)(PSYSTEM_LOGICAL_PROCES
 static PFN_GETLOGICALPROCESSORINFORMATION pfnGetLogicalProcessorInformation = nullptr;
 
 static BOOL WINAPI
-_DummyGetLogicalProcessorInformation(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnedLength)
+_CompatGetLogicalProcessorInformation(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnedLength)
 {
     UNREFERENCED_PARAMETER(Buffer);
     UNREFERENCED_PARAMETER(ReturnedLength);
@@ -29,12 +29,12 @@ _imp__GetLogicalProcessorInformation(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffe
 {
     if (!pfnGetLogicalProcessorInformation)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnGetLogicalProcessorInformation = reinterpret_cast<PFN_GETLOGICALPROCESSORINFORMATION>(GetProcAddress(hKernel32, "GetLogicalProcessorInformation"));
         if (!pfnGetLogicalProcessorInformation)
         {
-            pfnGetLogicalProcessorInformation = _DummyGetLogicalProcessorInformation;
+            pfnGetLogicalProcessorInformation = _CompatGetLogicalProcessorInformation;
         }
     }
 

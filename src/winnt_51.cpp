@@ -14,14 +14,14 @@ static PFN_DECODEPOINTER pfnDecodePointer = nullptr;
 static PFN_ENCODEPOINTER pfnEncodePointer = nullptr;
 
 static PVOID WINAPI
-_DummyDecodePointer(PVOID Ptr)
+_CompatDecodePointer(PVOID Ptr)
 {
     // Just return the input pointer without any decoding.
     return Ptr;
 }
 
 static PVOID WINAPI
-_DummyEncodePointer(PVOID Ptr)
+_CompatEncodePointer(PVOID Ptr)
 {
     // Just return the input pointer without any encoding.
     return Ptr;
@@ -32,12 +32,12 @@ _imp__DecodePointer(PVOID Ptr)
 {
     if (!pfnDecodePointer)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnDecodePointer = reinterpret_cast<PFN_DECODEPOINTER>(GetProcAddress(hKernel32, "DecodePointer"));
         if (!pfnDecodePointer)
         {
-            pfnDecodePointer = _DummyDecodePointer;
+            pfnDecodePointer = _CompatDecodePointer;
         }
     }
 
@@ -49,12 +49,12 @@ _imp__EncodePointer(PVOID Ptr)
 {
     if (!pfnEncodePointer)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnEncodePointer = reinterpret_cast<PFN_ENCODEPOINTER>(GetProcAddress(hKernel32, "EncodePointer"));
         if (!pfnEncodePointer)
         {
-            pfnEncodePointer = _DummyEncodePointer;
+            pfnEncodePointer = _CompatEncodePointer;
         }
     }
 

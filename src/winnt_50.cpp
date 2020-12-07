@@ -26,7 +26,7 @@ static PFN_INTERLOCKEDPUSHENTRYSLIST pfnInterlockedPushEntrySList = nullptr;
 static PFN_QUERYDEPTHSLIST pfnQueryDepthSList = nullptr;
 
 static BOOL WINAPI
-_DummyGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule)
+_CompatGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule)
 {
     UNREFERENCED_PARAMETER(dwFlags);
     UNREFERENCED_PARAMETER(lpModuleName);
@@ -39,9 +39,9 @@ _DummyGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule)
 }
 
 static BOOL WINAPI
-_DummyGetNumaHighestNodeNumber(PULONG HighestNodeNumber)
+_CompatGetNumaHighestNodeNumber(PULONG HighestNodeNumber)
 {
-    // An operating system so old that it needs this dummy implementation doesn't support NUMA either.
+    // An operating system so old that it needs this implementation doesn't support NUMA either.
     // So we can correctly return a single NUMA node 0 here.
     *HighestNodeNumber = 0;
     return TRUE;
@@ -49,7 +49,7 @@ _DummyGetNumaHighestNodeNumber(PULONG HighestNodeNumber)
 
 // Verified to functionally match the ReactOS implementation on i386.
 static void WINAPI
-_DummyInitializeSListHead(PSLIST_HEADER ListHead)
+_CompatInitializeSListHead(PSLIST_HEADER ListHead)
 {
     // Due to the union, this member encompasses the entire SLIST_HEADER structure.
     ListHead->Alignment = 0;
@@ -57,7 +57,7 @@ _DummyInitializeSListHead(PSLIST_HEADER ListHead)
 
 // Verified to functionally match the ReactOS implementation on i386.
 static PSLIST_ENTRY WINAPI
-_DummyInterlockedFlushSList(PSLIST_HEADER ListHead)
+_CompatInterlockedFlushSList(PSLIST_HEADER ListHead)
 {
     SLIST_HEADER InitialHead = *ListHead;
 
@@ -103,7 +103,7 @@ _DummyInterlockedFlushSList(PSLIST_HEADER ListHead)
 
 // Verified to functionally match the ReactOS implementation on i386.
 static PSLIST_ENTRY WINAPI
-_DummyInterlockedPopEntrySList(PSLIST_HEADER ListHead)
+_CompatInterlockedPopEntrySList(PSLIST_HEADER ListHead)
 {
     SLIST_HEADER InitialHead = *ListHead;
 
@@ -160,7 +160,7 @@ _DummyInterlockedPopEntrySList(PSLIST_HEADER ListHead)
 
 // Verified to functionally match the ReactOS implementation on i386.
 static PSLIST_ENTRY WINAPI
-_DummyInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
+_CompatInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
 {
     SLIST_HEADER InitialHead = *ListHead;
 
@@ -201,7 +201,7 @@ _DummyInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
 
 // Verified to functionally match the ReactOS implementation on i386.
 static USHORT WINAPI
-_DummyQueryDepthSList(PSLIST_HEADER ListHead)
+_CompatQueryDepthSList(PSLIST_HEADER ListHead)
 {
     return ListHead->Depth;
 }
@@ -211,12 +211,12 @@ _imp__GetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE * phModule
 {
     if (!pfnGetModuleHandleExW)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnGetModuleHandleExW = reinterpret_cast<PFN_GETMODULEHANDLEEXW>(GetProcAddress(hKernel32, "GetModuleHandleExW"));
         if (!pfnGetModuleHandleExW)
         {
-            pfnGetModuleHandleExW = _DummyGetModuleHandleExW;
+            pfnGetModuleHandleExW = _CompatGetModuleHandleExW;
         }
     }
 
@@ -228,12 +228,12 @@ _imp__GetNumaHighestNodeNumber(PULONG HighestNodeNumber)
 {
     if (!pfnGetNumaHighestNodeNumber)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnGetNumaHighestNodeNumber = reinterpret_cast<PFN_GETNUMAHIGHESTNODENUMBER>(GetProcAddress(hKernel32, "GetNumaHighestNodeNumber"));
         if (!pfnGetNumaHighestNodeNumber)
         {
-            pfnGetNumaHighestNodeNumber = _DummyGetNumaHighestNodeNumber;
+            pfnGetNumaHighestNodeNumber = _CompatGetNumaHighestNodeNumber;
         }
     }
 
@@ -272,12 +272,12 @@ _imp__InitializeSListHead(PSLIST_HEADER ListHead)
 {
     if (!pfnInitializeSListHead)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnInitializeSListHead = reinterpret_cast<PFN_INITIALIZESLISTHEAD>(GetProcAddress(hKernel32, "InitializeSListHead"));
         if (!pfnInitializeSListHead)
         {
-            pfnInitializeSListHead = _DummyInitializeSListHead;
+            pfnInitializeSListHead = _CompatInitializeSListHead;
         }
     }
 
@@ -289,12 +289,12 @@ _imp__InterlockedFlushSList(PSLIST_HEADER ListHead)
 {
     if (!pfnInterlockedFlushSList)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnInterlockedFlushSList = reinterpret_cast<PFN_INTERLOCKEDFLUSHSLIST>(GetProcAddress(hKernel32, "InterlockedFlushSList"));
         if (!pfnInterlockedFlushSList)
         {
-            pfnInterlockedFlushSList = _DummyInterlockedFlushSList;
+            pfnInterlockedFlushSList = _CompatInterlockedFlushSList;
         }
     }
 
@@ -306,12 +306,12 @@ _imp__InterlockedPopEntrySList(PSLIST_HEADER ListHead)
 {
     if (!pfnInterlockedPopEntrySList)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnInterlockedPopEntrySList = reinterpret_cast<PFN_INTERLOCKEDPOPENTRYSLIST>(GetProcAddress(hKernel32, "InterlockedPopEntrySList"));
         if (!pfnInterlockedPopEntrySList)
         {
-            pfnInterlockedPopEntrySList = _DummyInterlockedPopEntrySList;
+            pfnInterlockedPopEntrySList = _CompatInterlockedPopEntrySList;
         }
     }
 
@@ -323,12 +323,12 @@ _imp__InterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
 {
     if (!pfnInterlockedPushEntrySList)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnInterlockedPushEntrySList = reinterpret_cast<PFN_INTERLOCKEDPUSHENTRYSLIST>(GetProcAddress(hKernel32, "InterlockedPushEntrySList"));
         if (!pfnInterlockedPushEntrySList)
         {
-            pfnInterlockedPushEntrySList = _DummyInterlockedPushEntrySList;
+            pfnInterlockedPushEntrySList = _CompatInterlockedPushEntrySList;
         }
     }
 
@@ -340,12 +340,12 @@ _imp__QueryDepthSList(PSLIST_HEADER ListHead)
 {
     if (!pfnQueryDepthSList)
     {
-        // Check if the API is provided by kernel32, otherwise fall back to our dummy implementation.
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
         HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
         pfnQueryDepthSList = reinterpret_cast<PFN_QUERYDEPTHSLIST>(GetProcAddress(hKernel32, "QueryDepthSList"));
         if (!pfnQueryDepthSList)
         {
-            pfnQueryDepthSList = _DummyQueryDepthSList;
+            pfnQueryDepthSList = _CompatQueryDepthSList;
         }
     }
 
