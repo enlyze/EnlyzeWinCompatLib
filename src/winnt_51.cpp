@@ -4,7 +4,6 @@
 //
 
 // This file implements required APIs not available in Windows 2000 RTM (NT 5.0).
-#if !defined(_WIN64)
 #include "EnlyzeWinCompatLibInternal.h"
 
 typedef PVOID (WINAPI *PFN_DECODEPOINTER)(PVOID Ptr);
@@ -28,7 +27,7 @@ _CompatEncodePointer(PVOID Ptr)
 }
 
 extern "C" PVOID WINAPI
-_imp__DecodePointer(PVOID Ptr)
+LibDecodePointer(PVOID Ptr)
 {
     if (!pfnDecodePointer)
     {
@@ -45,7 +44,7 @@ _imp__DecodePointer(PVOID Ptr)
 }
 
 extern "C" PVOID WINAPI
-_imp__EncodePointer(PVOID Ptr)
+LibEncodePointer(PVOID Ptr)
 {
     if (!pfnEncodePointer)
     {
@@ -60,5 +59,3 @@ _imp__EncodePointer(PVOID Ptr)
 
     return pfnEncodePointer(Ptr);
 }
-
-#endif

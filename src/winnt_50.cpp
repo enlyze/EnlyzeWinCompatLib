@@ -4,7 +4,6 @@
 //
 
 // This file implements required APIs not available in Windows NT 4.0 RTM.
-#if !defined(_WIN64)
 #include "EnlyzeWinCompatLibInternal.h"
 
 typedef BOOL (WINAPI *PFN_GETMODULEHANDLEEXW)(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule);
@@ -207,7 +206,7 @@ _CompatQueryDepthSList(PSLIST_HEADER ListHead)
 }
 
 extern "C" BOOL WINAPI
-_imp__GetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE * phModule)
+LibGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE * phModule)
 {
     if (!pfnGetModuleHandleExW)
     {
@@ -224,7 +223,7 @@ _imp__GetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE * phModule
 }
 
 extern "C" BOOL WINAPI
-_imp__GetNumaHighestNodeNumber(PULONG HighestNodeNumber)
+LibGetNumaHighestNodeNumber(PULONG HighestNodeNumber)
 {
     if (!pfnGetNumaHighestNodeNumber)
     {
@@ -241,7 +240,7 @@ _imp__GetNumaHighestNodeNumber(PULONG HighestNodeNumber)
 }
 
 extern "C" BOOL WINAPI
-_imp__GetVersionExW(LPOSVERSIONINFOW lpVersionInformation)
+LibGetVersionExW(LPOSVERSIONINFOW lpVersionInformation)
 {
     if (!pfnGetVersionExW)
     {
@@ -268,7 +267,7 @@ _imp__GetVersionExW(LPOSVERSIONINFOW lpVersionInformation)
 }
 
 extern "C" void WINAPI
-_imp__InitializeSListHead(PSLIST_HEADER ListHead)
+LibInitializeSListHead(PSLIST_HEADER ListHead)
 {
     if (!pfnInitializeSListHead)
     {
@@ -285,7 +284,7 @@ _imp__InitializeSListHead(PSLIST_HEADER ListHead)
 }
 
 extern "C" PSLIST_ENTRY WINAPI
-_imp__InterlockedFlushSList(PSLIST_HEADER ListHead)
+LibInterlockedFlushSList(PSLIST_HEADER ListHead)
 {
     if (!pfnInterlockedFlushSList)
     {
@@ -302,7 +301,7 @@ _imp__InterlockedFlushSList(PSLIST_HEADER ListHead)
 }
 
 extern "C" PSLIST_ENTRY WINAPI
-_imp__InterlockedPopEntrySList(PSLIST_HEADER ListHead)
+LibInterlockedPopEntrySList(PSLIST_HEADER ListHead)
 {
     if (!pfnInterlockedPopEntrySList)
     {
@@ -319,7 +318,7 @@ _imp__InterlockedPopEntrySList(PSLIST_HEADER ListHead)
 }
 
 extern "C" PSLIST_ENTRY WINAPI
-_imp__InterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
+LibInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
 {
     if (!pfnInterlockedPushEntrySList)
     {
@@ -336,7 +335,7 @@ _imp__InterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
 }
 
 extern "C" USHORT WINAPI
-_imp__QueryDepthSList(PSLIST_HEADER ListHead)
+LibQueryDepthSList(PSLIST_HEADER ListHead)
 {
     if (!pfnQueryDepthSList)
     {
@@ -351,5 +350,3 @@ _imp__QueryDepthSList(PSLIST_HEADER ListHead)
 
     return pfnQueryDepthSList(ListHead);
 }
-
-#endif

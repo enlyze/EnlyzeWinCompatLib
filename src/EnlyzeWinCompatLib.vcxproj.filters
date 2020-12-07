@@ -30,4 +30,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="winnt_50_forwarders.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="winnt_51_forwarders.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="winnt_51_sp2_forwarders.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+  </ItemGroup>
 </Project>

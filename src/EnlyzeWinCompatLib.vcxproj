@@ -20,6 +20,11 @@
     <ClInclude Include="EnlyzeWinCompatLibInternal.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="winnt_50_forwarders.asm" />
+    <MASM Include="winnt_51_forwarders.asm" />
+    <MASM Include="winnt_51_sp2_forwarders.asm" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{C2C396B8-B585-4F0D-BD37-CF6D4347140F}</ProjectGuid>
@@ -42,7 +47,9 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -103,6 +110,9 @@
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
   <PropertyGroup>
     <XPDeprecationWarning>false</XPDeprecationWarning>
   </PropertyGroup>

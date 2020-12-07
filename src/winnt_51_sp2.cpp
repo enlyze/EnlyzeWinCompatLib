@@ -4,7 +4,6 @@
 //
 
 // This file implements required APIs not available in Windows XP SP2 (NT 5.1).
-#if !defined(_WIN64)
 #include "EnlyzeWinCompatLibInternal.h"
 
 typedef BOOL (WINAPI *PFN_GETLOGICALPROCESSORINFORMATION)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnedLength);
@@ -25,7 +24,7 @@ _CompatGetLogicalProcessorInformation(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buff
 }
 
 extern "C" BOOL WINAPI
-_imp__GetLogicalProcessorInformation(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnedLength)
+LibGetLogicalProcessorInformation(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnedLength)
 {
     if (!pfnGetLogicalProcessorInformation)
     {
@@ -40,5 +39,3 @@ _imp__GetLogicalProcessorInformation(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffe
 
     return pfnGetLogicalProcessorInformation(Buffer, ReturnedLength);
 }
-
-#endif
