@@ -6,13 +6,13 @@
 // This file implements required APIs not available in Windows NT 4.0 RTM.
 #include "EnlyzeWinCompatLibInternal.h"
 
-typedef void (WINAPI *PFN_INITIALIZECRITICALSECTIONANDSPINCOUNT)(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount);
+typedef BOOL (WINAPI *PFN_INITIALIZECRITICALSECTIONANDSPINCOUNT)(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount);
 typedef BOOL (WINAPI *PFN_SETFILEPOINTEREX)(HANDLE hFile, LARGE_INTEGER liDistanceToMove, PLARGE_INTEGER lpNewFilePointer, DWORD dwMoveMethod);
 
 static PFN_INITIALIZECRITICALSECTIONANDSPINCOUNT pfnInitializeCriticalSectionAndSpinCount = nullptr;
 static PFN_SETFILEPOINTEREX pfnSetFilePointerEx = nullptr;
 
-static void WINAPI
+static BOOL WINAPI
 _CompatInitializeCriticalSectionAndSpinCount(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount)
 {
     UNREFERENCED_PARAMETER(dwSpinCount);
@@ -20,6 +20,8 @@ _CompatInitializeCriticalSectionAndSpinCount(LPCRITICAL_SECTION lpCriticalSectio
     // The information in dwSpinCount is only a performance optimization for multiprocessor systems.
     // If an operating system doesn't have it, it's fine to just call InitializeCriticalSection.
     InitializeCriticalSection(lpCriticalSection);
+
+    return TRUE;
 }
 
 static BOOL WINAPI
@@ -40,7 +42,7 @@ _CompatSetFilePointerEx(HANDLE hFile, LARGE_INTEGER liDistanceToMove, PLARGE_INT
     return TRUE;
 }
 
-extern "C" void WINAPI
+extern "C" BOOL WINAPI
 LibInitializeCriticalSectionAndSpinCount(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount)
 {
     if (!pfnInitializeCriticalSectionAndSpinCount)
@@ -54,7 +56,7 @@ LibInitializeCriticalSectionAndSpinCount(LPCRITICAL_SECTION lpCriticalSection, D
         }
     }
 
-    pfnInitializeCriticalSectionAndSpinCount(lpCriticalSection, dwSpinCount);
+    return pfnInitializeCriticalSectionAndSpinCount(lpCriticalSection, dwSpinCount);
 }
 
 extern "C" BOOL WINAPI
