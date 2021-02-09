@@ -5,5 +5,5 @@
 
 #pragma once
 
-#define _WIN32_WINNT _WIN32_WINNT_NT4
+#define _WIN32_WINNT _WIN32_WINNT_WIN2K
 #include <SDKDDKVer.h>

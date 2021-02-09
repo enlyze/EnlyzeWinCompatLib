@@ -1,5 +1,5 @@
 #
-# Patches an EXE file to run under Windows NT 4.0 and 2000 (NT 5.0).
+# Patches an EXE file to run under Windows 2000 (NT 5.0).
 # Necessary since Visual Studio's linker doesn't let us set the subsystem version below 5.01 (Windows XP).
 #
 # Written by Colin Finck for ENLYZE GmbH
@@ -20,16 +20,16 @@ if ($pe_signature -ne 0x4550) {
     exit 1
 }
 
-# Set MajorOperatingSystemVersion (WORD) to 4
-$exe[$pe_start + 0x40] = 0x04;
+# Set MajorOperatingSystemVersion (WORD) to 5
+$exe[$pe_start + 0x40] = 0x05;
 $exe[$pe_start + 0x41] = 0x00;
 
 # Set MinorOperatingSystemVersion (WORD) to 0
 $exe[$pe_start + 0x42] = 0x00;
 $exe[$pe_start + 0x43] = 0x00;
 
-# Set MajorSubsystemVersion (WORD) to 4
-$exe[$pe_start + 0x48] = 0x04;
+# Set MajorSubsystemVersion (WORD) to 5
+$exe[$pe_start + 0x48] = 0x05;
 $exe[$pe_start + 0x49] = 0x00;
 
 # Set MinorSubsystemVersion (WORD) to 0
