@@ -7,7 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EnlyzeWinCompatLib", "Enlyz
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libc++", "libcxx\src\libc++.vcxproj", "{CF14A29C-E25E-4FAF-8C98-2F5006800132}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winpthreads", "winpthreads\src\winpthreads.vcxproj", "{D3FACA21-D165-4B1E-9A06-A9B58964886C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winpthreads", "libcxx\src\winpthreads\src\winpthreads.vcxproj", "{D3FACA21-D165-4B1E-9A06-A9B58964886C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

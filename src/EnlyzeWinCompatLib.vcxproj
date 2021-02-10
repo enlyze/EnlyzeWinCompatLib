@@ -24,14 +24,6 @@
     <MASM Include="winnt_50_forwarders.asm" />
     <MASM Include="winnt_51_forwarders.asm" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="libcxx\src\libc++.vcxproj">
-      <Project>{cf14a29c-e25e-4faf-8c98-2f5006800132}</Project>
-    </ProjectReference>
-    <ProjectReference Include="winpthreads\src\winpthreads.vcxproj">
-      <Project>{d3faca21-d165-4b1e-9a06-a9b58964886c}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

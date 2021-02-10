@@ -1,6 +1,0 @@
-[submodule "src/libcxx"]
-	path = src/libcxx
-	url = https://github.com/enlyze/libcxx.git
-[submodule "src/winpthreads"]
-	path = src/winpthreads
-	url = https://github.com/enlyze/winpthreads.git
