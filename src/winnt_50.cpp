@@ -1,28 +1,38 @@
 //
-// EnlyzeWinCompatLib - Let MSVC v141_xp targeted applications run on even older Windows versions
+// EnlyzeWinCompatLib - Let Clang-compiled applications run on older Windows versions
 // Written by Colin Finck for ENLYZE GmbH
 //
 
 // This file implements required APIs not available in Windows 2000 RTM (NT 5.0).
 #include "EnlyzeWinCompatLibInternal.h"
 
+typedef struct _COMPAT_SLIST_ENTRY
+{
+    struct _COMPAT_SLIST_ENTRY* Next;
+}
+COMPAT_SLIST_ENTRY, *PCOMPAT_SLIST_ENTRY;
+
+typedef union _COMPAT_SLIST_HEADER
+{
+    ULONGLONG Alignment;
+    struct
+    {
+        COMPAT_SLIST_ENTRY Next;
+        WORD Depth;
+        WORD Sequence;
+    };
+}
+COMPAT_SLIST_HEADER, *PCOMPAT_SLIST_HEADER;
+
 typedef BOOL (WINAPI *PFN_GETMODULEHANDLEEXW)(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule);
-typedef BOOL (WINAPI *PFN_GETNUMAHIGHESTNODENUMBER)(PULONG HighestNodeNumber);
-typedef BOOL (WINAPI *PFN_GETVERSIONEXW)(LPOSVERSIONINFOW lpVersionInformation);
-typedef void (WINAPI *PFN_INITIALIZESLISTHEAD)(PSLIST_HEADER ListHead);
-typedef PSLIST_ENTRY (WINAPI *PFN_INTERLOCKEDFLUSHSLIST)(PSLIST_HEADER ListHead);
-typedef PSLIST_ENTRY (WINAPI *PFN_INTERLOCKEDPOPENTRYSLIST)(PSLIST_HEADER ListHead);
-typedef PSLIST_ENTRY (WINAPI *PFN_INTERLOCKEDPUSHENTRYSLIST)(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry);
-typedef USHORT (WINAPI *PFN_QUERYDEPTHSLIST)(PSLIST_HEADER ListHead);
+typedef void (WINAPI *PFN_INITIALIZESLISTHEAD)(PCOMPAT_SLIST_HEADER ListHead);
+typedef PCOMPAT_SLIST_ENTRY (WINAPI *PFN_INTERLOCKEDFLUSHSLIST)(PCOMPAT_SLIST_HEADER ListHead);
+typedef PCOMPAT_SLIST_ENTRY (WINAPI *PFN_INTERLOCKEDPUSHENTRYSLIST)(PCOMPAT_SLIST_HEADER ListHead, PCOMPAT_SLIST_ENTRY ListEntry);
 
 static PFN_GETMODULEHANDLEEXW pfnGetModuleHandleExW = nullptr;
-static PFN_GETNUMAHIGHESTNODENUMBER pfnGetNumaHighestNodeNumber = nullptr;
-static PFN_GETVERSIONEXW pfnGetVersionExW = nullptr;
 static PFN_INITIALIZESLISTHEAD pfnInitializeSListHead = nullptr;
 static PFN_INTERLOCKEDFLUSHSLIST pfnInterlockedFlushSList = nullptr;
-static PFN_INTERLOCKEDPOPENTRYSLIST pfnInterlockedPopEntrySList = nullptr;
 static PFN_INTERLOCKEDPUSHENTRYSLIST pfnInterlockedPushEntrySList = nullptr;
-static PFN_QUERYDEPTHSLIST pfnQueryDepthSList = nullptr;
 
 static BOOL WINAPI
 _CompatGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule)
@@ -37,28 +47,19 @@ _CompatGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule
     return FALSE;
 }
 
-static BOOL WINAPI
-_CompatGetNumaHighestNodeNumber(PULONG HighestNodeNumber)
-{
-    // An operating system so old that it needs this implementation doesn't support NUMA either.
-    // So we can correctly return a single NUMA node 0 here.
-    *HighestNodeNumber = 0;
-    return TRUE;
-}
-
 // Verified to functionally match the ReactOS implementation on i386.
 static void WINAPI
-_CompatInitializeSListHead(PSLIST_HEADER ListHead)
+_CompatInitializeSListHead(PCOMPAT_SLIST_HEADER ListHead)
 {
     // Due to the union, this member encompasses the entire SLIST_HEADER structure.
     ListHead->Alignment = 0;
 }
 
 // Verified to functionally match the ReactOS implementation on i386.
-static PSLIST_ENTRY WINAPI
-_CompatInterlockedFlushSList(PSLIST_HEADER ListHead)
+static PCOMPAT_SLIST_ENTRY WINAPI
+_CompatInterlockedFlushSList(PCOMPAT_SLIST_HEADER ListHead)
 {
-    SLIST_HEADER InitialHead = *ListHead;
+    COMPAT_SLIST_HEADER InitialHead = *ListHead;
 
     for (;;)
     {
@@ -70,7 +71,7 @@ _CompatInterlockedFlushSList(PSLIST_HEADER ListHead)
         }
 
         // Zero the depth and first list entry pointer while keeping the sequence number intact.
-        SLIST_HEADER NewHead = InitialHead;
+        COMPAT_SLIST_HEADER NewHead = InitialHead;
         NewHead.Depth = 0;
         NewHead.Next.Next = nullptr;
 
@@ -78,7 +79,7 @@ _CompatInterlockedFlushSList(PSLIST_HEADER ListHead)
         // * Check if the list is still the same we last saved in InitialHead.
         // * If that is the case, update it to our modified NewHead.
         // * If not, someone else was faster than us. Store the changed list in PreviousHead.
-        SLIST_HEADER PreviousHead;
+        COMPAT_SLIST_HEADER PreviousHead;
         PreviousHead.Alignment = static_cast<ULONGLONG>(_InterlockedCompareExchange64(
             reinterpret_cast<long long*>(&ListHead->Alignment),
             static_cast<long long>(NewHead.Alignment),
@@ -101,72 +102,15 @@ _CompatInterlockedFlushSList(PSLIST_HEADER ListHead)
 }
 
 // Verified to functionally match the ReactOS implementation on i386.
-static PSLIST_ENTRY WINAPI
-_CompatInterlockedPopEntrySList(PSLIST_HEADER ListHead)
+static PCOMPAT_SLIST_ENTRY WINAPI
+_CompatInterlockedPushEntrySList(PCOMPAT_SLIST_HEADER ListHead, PCOMPAT_SLIST_ENTRY ListEntry)
 {
-    SLIST_HEADER InitialHead = *ListHead;
-
-    for (;;)
-    {
-        // Check if the list is empty.
-        if (InitialHead.Next.Next == nullptr)
-        {
-            // Nothing to do for us and no list entry to return.
-            return nullptr;
-        }
-
-        // Adjust the depth.
-        SLIST_HEADER NewHead = InitialHead;
-        NewHead.Depth--;
-
-        // Unmount the first list entry.
-        // It may have already been freed in the meantime, so check this inside a SEH block.
-        __try
-        {
-            NewHead.Next = *NewHead.Next.Next;
-        }
-        __except (EXCEPTION_EXECUTE_HANDLER)
-        {
-            InitialHead = *ListHead;
-            continue;
-        }
-
-        // Do the following things in a single atomic operation:
-        // * Check if the list is still the same we last saved in InitialHead.
-        // * If that is the case, update it to our modified NewHead.
-        // * If not, someone else was faster than us. Store the changed list in PreviousHead.
-        SLIST_HEADER PreviousHead;
-        PreviousHead.Alignment = static_cast<ULONGLONG>(_InterlockedCompareExchange64(
-            reinterpret_cast<long long*>(&ListHead->Alignment),
-            static_cast<long long>(NewHead.Alignment),
-            static_cast<long long>(InitialHead.Alignment)
-        ));
-
-        if (InitialHead.Alignment == PreviousHead.Alignment)
-        {
-            // We successfully popped from the list.
-            // Return that list entry.
-            return PreviousHead.Next.Next;
-        }
-        else
-        {
-            // Someone else was faster than us.
-            // Repeat the entire process with the new InitialHead.
-            InitialHead = PreviousHead;
-        }
-    }
-}
-
-// Verified to functionally match the ReactOS implementation on i386.
-static PSLIST_ENTRY WINAPI
-_CompatInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
-{
-    SLIST_HEADER InitialHead = *ListHead;
+    COMPAT_SLIST_HEADER InitialHead = *ListHead;
 
     for (;;)
     {
         // Mount the list entry at the very beginning and adjust depth and sequence.
-        SLIST_HEADER NewHead = InitialHead;
+        COMPAT_SLIST_HEADER NewHead = InitialHead;
         ListEntry->Next = NewHead.Next.Next;
         NewHead.Next.Next = ListEntry;
         NewHead.Depth++;
@@ -176,7 +120,7 @@ _CompatInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
         // * Check if the list is still the same we last saved in InitialHead.
         // * If that is the case, update it to our modified NewHead.
         // * If not, someone else was faster than us. Store the changed list in PreviousHead.
-        SLIST_HEADER PreviousHead;
+        COMPAT_SLIST_HEADER PreviousHead;
         PreviousHead.Alignment = static_cast<ULONGLONG>(_InterlockedCompareExchange64(
             reinterpret_cast<long long*>(&ListHead->Alignment),
             static_cast<long long>(NewHead.Alignment),
@@ -198,13 +142,6 @@ _CompatInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
     }
 }
 
-// Verified to functionally match the ReactOS implementation on i386.
-static USHORT WINAPI
-_CompatQueryDepthSList(PSLIST_HEADER ListHead)
-{
-    return ListHead->Depth;
-}
-
 extern "C" BOOL WINAPI
 LibGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE * phModule)
 {
@@ -222,53 +159,8 @@ LibGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE * phModule)
     return pfnGetModuleHandleExW(dwFlags, lpModuleName, phModule);
 }
 
-extern "C" BOOL WINAPI
-LibGetNumaHighestNodeNumber(PULONG HighestNodeNumber)
-{
-    if (!pfnGetNumaHighestNodeNumber)
-    {
-        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
-        HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
-        pfnGetNumaHighestNodeNumber = reinterpret_cast<PFN_GETNUMAHIGHESTNODENUMBER>(GetProcAddress(hKernel32, "GetNumaHighestNodeNumber"));
-        if (!pfnGetNumaHighestNodeNumber)
-        {
-            pfnGetNumaHighestNodeNumber = _CompatGetNumaHighestNodeNumber;
-        }
-    }
-
-    return pfnGetNumaHighestNodeNumber(HighestNodeNumber);
-}
-
-extern "C" BOOL WINAPI
-LibGetVersionExW(LPOSVERSIONINFOW lpVersionInformation)
-{
-    if (!pfnGetVersionExW)
-    {
-        // This API is guaranteed to exist.
-        HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
-        pfnGetVersionExW = reinterpret_cast<PFN_GETVERSIONEXW>(GetProcAddress(hKernel32, "GetVersionExW"));
-    }
-
-    if (!pfnGetVersionExW(lpVersionInformation))
-    {
-        return FALSE;
-    }
-
-    // Check if we are running on something older than Windows XP.
-    if (lpVersionInformation->dwMajorVersion < 5 || lpVersionInformation->dwMajorVersion == 5 && lpVersionInformation->dwMinorVersion == 0)
-    {
-        // Pretend to be Windows XP, which is the minimum version officially supported by the CRT.
-        // If we don't do that, the CRT throws ::Concurrency::unsupported_os() in ResourceManager::RetrieveSystemVersionInformation.
-        // Fortunately, this is the only function calling GetVersionExW.
-        lpVersionInformation->dwMajorVersion = 5;
-        lpVersionInformation->dwMinorVersion = 1;
-    }
-
-    return TRUE;
-}
-
 extern "C" void WINAPI
-LibInitializeSListHead(PSLIST_HEADER ListHead)
+LibInitializeSListHead(PCOMPAT_SLIST_HEADER ListHead)
 {
     if (!pfnInitializeSListHead)
     {
@@ -284,8 +176,8 @@ LibInitializeSListHead(PSLIST_HEADER ListHead)
     return pfnInitializeSListHead(ListHead);
 }
 
-extern "C" PSLIST_ENTRY WINAPI
-LibInterlockedFlushSList(PSLIST_HEADER ListHead)
+extern "C" PCOMPAT_SLIST_ENTRY WINAPI
+LibInterlockedFlushSList(PCOMPAT_SLIST_HEADER ListHead)
 {
     if (!pfnInterlockedFlushSList)
     {
@@ -301,25 +193,8 @@ LibInterlockedFlushSList(PSLIST_HEADER ListHead)
     return pfnInterlockedFlushSList(ListHead);
 }
 
-extern "C" PSLIST_ENTRY WINAPI
-LibInterlockedPopEntrySList(PSLIST_HEADER ListHead)
-{
-    if (!pfnInterlockedPopEntrySList)
-    {
-        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
-        HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
-        pfnInterlockedPopEntrySList = reinterpret_cast<PFN_INTERLOCKEDPOPENTRYSLIST>(GetProcAddress(hKernel32, "InterlockedPopEntrySList"));
-        if (!pfnInterlockedPopEntrySList)
-        {
-            pfnInterlockedPopEntrySList = _CompatInterlockedPopEntrySList;
-        }
-    }
-
-    return pfnInterlockedPopEntrySList(ListHead);
-}
-
-extern "C" PSLIST_ENTRY WINAPI
-LibInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
+extern "C" PCOMPAT_SLIST_ENTRY WINAPI
+LibInterlockedPushEntrySList(PCOMPAT_SLIST_HEADER ListHead, PCOMPAT_SLIST_ENTRY ListEntry)
 {
     if (!pfnInterlockedPushEntrySList)
     {
@@ -333,21 +208,4 @@ LibInterlockedPushEntrySList(PSLIST_HEADER ListHead, PSLIST_ENTRY ListEntry)
     }
 
     return pfnInterlockedPushEntrySList(ListHead, ListEntry);
-}
-
-extern "C" USHORT WINAPI
-LibQueryDepthSList(PSLIST_HEADER ListHead)
-{
-    if (!pfnQueryDepthSList)
-    {
-        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
-        HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
-        pfnQueryDepthSList = reinterpret_cast<PFN_QUERYDEPTHSLIST>(GetProcAddress(hKernel32, "QueryDepthSList"));
-        if (!pfnQueryDepthSList)
-        {
-            pfnQueryDepthSList = _CompatQueryDepthSList;
-        }
-    }
-
-    return pfnQueryDepthSList(ListHead);
 }

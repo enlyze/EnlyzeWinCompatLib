@@ -1,16 +1,30 @@
 //
-// EnlyzeWinCompatLib - Let MSVC v141_xp targeted applications run on even older Windows versions
+// EnlyzeWinCompatLib - Let Clang-compiled applications run on older Windows versions
 // Written by Colin Finck for ENLYZE GmbH
 //
 
 // This file implements required APIs not available in Windows NT 4.0 RTM.
 #include "EnlyzeWinCompatLibInternal.h"
 
+typedef BOOL (WINAPI *PFN_GETFILESIZEEX)(HANDLE hFile, PLARGE_INTEGER lpFileSize);
 typedef BOOL (WINAPI *PFN_INITIALIZECRITICALSECTIONANDSPINCOUNT)(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount);
 typedef BOOL (WINAPI *PFN_SETFILEPOINTEREX)(HANDLE hFile, LARGE_INTEGER liDistanceToMove, PLARGE_INTEGER lpNewFilePointer, DWORD dwMoveMethod);
 
+static PFN_GETFILESIZEEX pfnGetFileSizeEx = nullptr;
 static PFN_INITIALIZECRITICALSECTIONANDSPINCOUNT pfnInitializeCriticalSectionAndSpinCount = nullptr;
 static PFN_SETFILEPOINTEREX pfnSetFilePointerEx = nullptr;
+
+static BOOL WINAPI
+_CompatGetFileSizeEx(HANDLE hFile, PLARGE_INTEGER lpFileSize)
+{
+    lpFileSize->LowPart = GetFileSize(hFile, reinterpret_cast<LPDWORD>(&lpFileSize->HighPart));
+    if (lpFileSize->LowPart == INVALID_FILE_SIZE && GetLastError() != NO_ERROR)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 static BOOL WINAPI
 _CompatInitializeCriticalSectionAndSpinCount(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount)
@@ -40,6 +54,23 @@ _CompatSetFilePointerEx(HANDLE hFile, LARGE_INTEGER liDistanceToMove, PLARGE_INT
     }
 
     return TRUE;
+}
+
+extern "C" BOOL WINAPI
+LibGetFileSizeEx(HANDLE hFile, PLARGE_INTEGER lpFileSize)
+{
+    if (!pfnGetFileSizeEx)
+    {
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
+        HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
+        pfnGetFileSizeEx = reinterpret_cast<PFN_GETFILESIZEEX>(GetProcAddress(hKernel32, "GetFileSizeEx"));
+        if (!pfnGetFileSizeEx)
+        {
+            pfnGetFileSizeEx = _CompatGetFileSizeEx;
+        }
+    }
+
+    return pfnGetFileSizeEx(hFile, lpFileSize);
 }
 
 extern "C" BOOL WINAPI

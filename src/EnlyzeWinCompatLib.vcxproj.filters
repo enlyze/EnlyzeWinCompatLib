@@ -15,17 +15,11 @@
     <ClCompile Include="winnt_51.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="winnt_51_sp2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="winnt_40.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EnlyzeWinCompatLib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -38,9 +32,6 @@
       <Filter>Source Files</Filter>
     </MASM>
     <MASM Include="winnt_51_forwarders.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
-    <MASM Include="winnt_51_sp2_forwarders.asm">
       <Filter>Source Files</Filter>
     </MASM>
     <MASM Include="winnt_40_forwarders.asm">
