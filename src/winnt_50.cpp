@@ -25,11 +25,13 @@ typedef union _COMPAT_SLIST_HEADER
 COMPAT_SLIST_HEADER, *PCOMPAT_SLIST_HEADER;
 
 typedef BOOL (WINAPI *PFN_GETMODULEHANDLEEXW)(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule);
+typedef BOOL (WINAPI *PFN_HEAPQUERYINFORMATION)(HANDLE HeapHandle, HEAP_INFORMATION_CLASS HeapInformationClass, PVOID HeapInformation, SIZE_T HeapInformationLength, PSIZE_T ReturnLength);
 typedef void (WINAPI *PFN_INITIALIZESLISTHEAD)(PCOMPAT_SLIST_HEADER ListHead);
 typedef PCOMPAT_SLIST_ENTRY (WINAPI *PFN_INTERLOCKEDFLUSHSLIST)(PCOMPAT_SLIST_HEADER ListHead);
 typedef PCOMPAT_SLIST_ENTRY (WINAPI *PFN_INTERLOCKEDPUSHENTRYSLIST)(PCOMPAT_SLIST_HEADER ListHead, PCOMPAT_SLIST_ENTRY ListEntry);
 
 static PFN_GETMODULEHANDLEEXW pfnGetModuleHandleExW = nullptr;
+static PFN_HEAPQUERYINFORMATION pfnHeapQueryInformation = nullptr;
 static PFN_INITIALIZESLISTHEAD pfnInitializeSListHead = nullptr;
 static PFN_INTERLOCKEDFLUSHSLIST pfnInterlockedFlushSList = nullptr;
 static PFN_INTERLOCKEDPUSHENTRYSLIST pfnInterlockedPushEntrySList = nullptr;
@@ -45,6 +47,33 @@ _CompatGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule
     // It checks whether this is a .NET process (lpModuleName = "mscoree.dll") to call cor_exit_process just in case.
     // As we know that we are not a .NET process, we can just return FALSE here.
     return FALSE;
+}
+
+static BOOL WINAPI
+_CompatHeapQueryInformation(HANDLE HeapHandle, HEAP_INFORMATION_CLASS HeapInformationClass, PVOID HeapInformation, SIZE_T HeapInformationLength, PSIZE_T ReturnLength)
+{
+    // We assume that a correct handle has been passed and that HeapCompatibilityInformation
+    // (as the only supported HeapInformationClass) has been queried.
+    UNREFERENCED_PARAMETER(HeapHandle);
+    UNREFERENCED_PARAMETER(HeapInformationClass);
+
+    if (HeapInformationLength < sizeof(ULONG))
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
+    // An operating system so old that it needs this implementation doesn't support any fancy heap features.
+    // So return 0 to indicate a standard heap here.
+    PULONG pCompatibilityInformation = reinterpret_cast<PULONG>(HeapInformation);
+    *pCompatibilityInformation = 0;
+
+    if (ReturnLength)
+    {
+        *ReturnLength = sizeof(ULONG);
+    }
+
+    return TRUE;
 }
 
 // Verified to functionally match the ReactOS implementation on i386.
@@ -157,6 +186,23 @@ LibGetModuleHandleExW(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE * phModule)
     }
 
     return pfnGetModuleHandleExW(dwFlags, lpModuleName, phModule);
+}
+
+extern "C" BOOL WINAPI
+LibHeapQueryInformation(HANDLE HeapHandle, HEAP_INFORMATION_CLASS HeapInformationClass, PVOID HeapInformation, SIZE_T HeapInformationLength, PSIZE_T ReturnLength)
+{
+    if (!pfnHeapQueryInformation)
+    {
+        // Check if the API is provided by kernel32, otherwise fall back to our implementation.
+        HMODULE hKernel32 = GetModuleHandleW(L"kernel32");
+        pfnHeapQueryInformation = reinterpret_cast<PFN_HEAPQUERYINFORMATION>(GetProcAddress(hKernel32, "HeapQueryInformation"));
+        if (!pfnHeapQueryInformation)
+        {
+            pfnHeapQueryInformation = _CompatHeapQueryInformation;
+        }
+    }
+
+    return pfnHeapQueryInformation(HeapHandle, HeapInformationClass, HeapInformation, HeapInformationLength, ReturnLength);
 }
 
 extern "C" void WINAPI

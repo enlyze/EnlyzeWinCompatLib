@@ -6,6 +6,7 @@
 .model flat
 
 EXTERN _LibGetModuleHandleExW@12 : PROC
+EXTERN _LibHeapQueryInformation@20 : PROC
 EXTERN _LibInitializeSListHead@4 : PROC
 EXTERN _LibInterlockedFlushSList@4 : PROC
 EXTERN _LibInterlockedPushEntrySList@8 : PROC
@@ -14,6 +15,9 @@ EXTERN _LibInterlockedPushEntrySList@8 : PROC
 
 PUBLIC __imp__GetModuleHandleExW@12
 __imp__GetModuleHandleExW@12 dd _LibGetModuleHandleExW@12
+
+PUBLIC __imp__HeapQueryInformation@20
+__imp__HeapQueryInformation@20 dd _LibHeapQueryInformation@20
 
 PUBLIC __imp__InitializeSListHead@4
 __imp__InitializeSListHead@4 dd _LibInitializeSListHead@4
