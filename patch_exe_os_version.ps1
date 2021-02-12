@@ -2,7 +2,8 @@
 # Patches an EXE file to run under Windows 2000 (NT 5.0).
 # Necessary since Visual Studio's linker doesn't let us set the subsystem version below 5.01 (Windows XP).
 #
-# Written by Colin Finck for ENLYZE GmbH
+# Copyright (c) 2021 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+# SPDX-License-Identifier: MIT
 #
 
 $exepath = Resolve-Path $args[0]

@@ -1,6 +1,7 @@
 //
 // EnlyzeWinCompatLib - Let MSVC v141_xp targeted applications run on even older Windows versions
-// Written by Colin Finck for ENLYZE GmbH
+// Copyright (c) 2021 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// SPDX-License-Identifier: MIT
 //
 
 #pragma once
