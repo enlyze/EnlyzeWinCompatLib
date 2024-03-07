@@ -18,6 +18,9 @@
     <ClCompile Include="winnt_40.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="static_init.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">

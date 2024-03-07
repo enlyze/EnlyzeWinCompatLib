@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="static_init.c" />
     <ClCompile Include="winnt_40.cpp" />
     <ClCompile Include="winnt_50.cpp" />
     <ClCompile Include="winnt_51.cpp" />
@@ -76,6 +77,7 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>-march=pentium-mmx</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(ProjectDir)libcxx\src\winpthreads\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -96,6 +98,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <AdditionalOptions>-flto -march=pentium-mmx</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(ProjectDir)libcxx\src\winpthreads\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
